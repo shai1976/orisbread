@@ -10,15 +10,14 @@
 <!-- ============================================================
      CONFIG (JSON)
      apiUrl: נתיב ה-API של Vercel. ברירת מחדל: /api/order
-     maxOrders / orderRound / open מנוהלים בלשונית Config בגיליון.
-     הערכים כאן משמשים רק כגיבוי במצב הדגמה.
+     loavesLeft / orderRound / open מנוהלים בלשונית Config בגיליון.
+     המלאי נקבע לפי מספר הכיכרות שנותרו בלבד.
      ============================================================ -->
 <script type="application/json" id="config">
 {
   "business": "עדהלחם",
   "apiUrl": "/api/order",
   "bitPhone": "0544444444",
-  "maxOrders": 20,
   "orderRound": "2026-10-02",
   "deadline": "הזמנות עד יום רביעי בחצות",
   "pickupTime": "איסוף ביום שישי בבוקר",
@@ -171,31 +170,18 @@ const CFG = JSON.parse(document.getElementById('config').textContent);
 /* ---------- Order store ----------
    apiUrl מוגדר → Vercel API → Google Apps Script → Google Sheet
    apiUrl ריק  → מצב הדגמה בדפדפן בלבד */
-const LOCAL = !CFG.apiUrl;
-const KEY = 'adahlechem_orders';
 const Store = {
-  status: { open: true, left: CFG.maxOrders, ready: false },
-  local(){ try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return this._mem || []; } },
+  status: { open: false, left: 0, ready: false },
   async load(){
-    if(LOCAL){
-      const n = this.local().filter(o=>o.round===CFG.orderRound).length;
-      this.status = { open: n < CFG.maxOrders, left: Math.max(0, CFG.maxOrders-n), ready: true };
-      return;
-    }
     try{
       const r = await fetch(CFG.apiUrl + '?action=status', { cache: 'no-store' });
       const s = await r.json();
-      this.status = { open: !!s.open, left: s.left, ready: true };
+      if(!r.ok || !s.ok) throw new Error(s.reason || 'status_failed');
+      const left = Math.max(0, Math.floor(Number(s.left) || 0));
+      this.status = { open: !!s.open && left > 0, left, ready: true };
     }catch(e){ this.status = { open: false, left: 0, ready: true, error: true }; }
   },
   async add(order){
-    if(LOCAL){
-      order.id = 'ADA-' + Math.floor(1000 + Math.random()*9000);
-      order.round = CFG.orderRound;
-      const l = this.local(); l.push(order); this._mem = l;
-      try{ localStorage.setItem(KEY, JSON.stringify(l)); }catch(e){}
-      await this.load(); return { ok: true, id: order.id };
-    }
     const r = await fetch(CFG.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
