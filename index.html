@@ -24,10 +24,10 @@
   "pickupTime": "איסוף ביום שישי בבוקר",
   "pickupPoints": ["בנימינה", "גבעת עדה"],
   "products": [
-    { "id": "kfar",    "name": "לחם הכפר",          "desc": "הלחם שהכול התחיל ממנו. קרום עבה ופריך, פנים אוורירי וחמצמץ.", "price": 35, "tone": "#8a6440", "image": "241feef9-8c3f-4c02-82bf-04023c37244c.jpg" },
-    { "id": "kusmin",  "name": "לחם כוסמין",        "desc": "קמח כוסמין מלא, טעם אגוזי ועמוק, מרקם דחוס ועסיסי.",          "price": 38, "tone": "#6f5a3e", "image": "f5277df5-0d49-4c84-b636-a0391d0eeb46.jpg" },
-    { "id": "adom",    "name": "לחם אדום",          "desc": "כיכר בגוון אדמדם עם מתיקות עדינה וקרום כהה.",                  "price": 38, "tone": "#8c4a3a", "image": "e457a850-26fb-4c3e-94fc-123b768719c6.jpg" },
-    { "id": "kalamata","name": "לחם זיתי קלמטה",    "desc": "זיתי קלמטה שלמים בתוך הבצק. מלוח, עשיר, מושלם עם גבינה.",     "price": 42, "tone": "#4e4a3c", "image": "49f7122c-8aed-4634-8316-007222116f2e.jpg" }
+    { "id": "kfar",     "name": "לחם הכפר",              "desc": "לחם מחמצת \"כפרי\" מקמח חיטה לבן ומלא (30%)", "price": 33, "tone": "#8a6440", "image": "241feef9-8c3f-4c02-82bf-04023c37244c.jpg" },
+    { "id": "kids",     "name": "לחם שילדים אוהבים",     "desc": "מחמצת מקמח לבן, רך וטעים",                         "price": 30, "tone": "#6f5a3e", "image": "f5277df5-0d49-4c84-b636-a0391d0eeb46.jpg" },
+    { "id": "ryeSeeds", "name": "לחם שיפון וגרעינים",    "desc": "לחם שיפון מזין ומשביע, מלא בדברים טובים.",          "price": 38, "tone": "#8c4a3a", "image": "e457a850-26fb-4c3e-94fc-123b768719c6.jpg" },
+    { "id": "spelt",    "name": "לחם מחמצת כוסמין מלא",  "desc": "לחם 100% מקמח כוסמין מלא. טעים, משביע ובריא!",       "price": 38, "tone": "#4e4a3c", "image": "49f7122c-8aed-4634-8316-007222116f2e.jpg" }
   ]
 }
 </script>
@@ -70,6 +70,8 @@ button{font:inherit;cursor:pointer}
 .sub{color:var(--ink-soft);margin:0 0 22px}
 .loaf{display:grid;grid-template-columns:112px 1fr;gap:16px;padding:18px 0;border-top:1.5px solid var(--line);align-items:start}
 .loaf:last-child{border-bottom:1.5px solid var(--line)}
+.extras-note{margin:20px 0 8px;padding:16px 18px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);font-size:16px;line-height:1.65}
+.extras-note strong{font-size:18px;color:var(--crust)}
 .ph{aspect-ratio:1;border-radius:50% 50% 46% 46%/58% 58% 42% 42%;position:relative;overflow:hidden;
   background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.35),transparent 45%),
              repeating-radial-gradient(circle at 60% 55%,rgba(0,0,0,.12) 0 3px,transparent 3px 9px),var(--tone)}
@@ -150,6 +152,7 @@ pre.summary{white-space:pre-wrap;background:var(--card);border:1.5px dashed var(
   <h2 class="section-title">הלחמים של השבוע</h2>
   <p class="sub" id="stock"></p>
   <section id="products"></section>
+  <div class="extras-note"><strong>תוספות ופריסה</strong><br>לכל הלחמים ניתן לשלב תוספות כגון זיתים, אגוזים, פרג, שומשום וכו'.<br>ניתן להזמין פרוס.</div>
 
   <p class="foot">עדהלחם · מחמצת ביתית ותוספות<br>תשלום בביט לאחר ההזמנה</p>
 </main>
@@ -220,9 +223,9 @@ function renderStock(){
     $('#closed').innerHTML = `<div class="closed-banner"><h2>אין חיבור כרגע</h2>לא הצלחנו לבדוק את המלאי. רעננו את הדף בעוד רגע.</div>`;
     return;
   }
-  $('#stock').textContent = s.open ? `מלאי מוגבל. נשארו ${s.left} הזמנות לסבב הזה.` : 'ההזמנות לסבב הזה סגורות.';
+  $('#stock').textContent = s.open ? `מלאי מוגבל. נשארו ${s.left} כיכרות לסבב הזה.` : 'המלאי לסבב הזה אזל.';
   $('#closed').innerHTML = s.open ? '' :
-    `<div class="closed-banner"><h2>אזל לשבוע הזה</h2>כל הכיכרות של הסבב הוזמנו. מחכים לכם בסבב הבא 🩵</div>`;
+    `<div class="closed-banner"><h2>אזל לשבוע הזה</h2>כל הכיכרות של הסבב הוזמנו. מחכים לכם בסבב הבא.</div>`;
 }
 function renderProducts(){
   const closed = isClosed();
@@ -290,7 +293,7 @@ async function confirmOrder(){
   if(!res.ok){
     btn.disabled = false; btn.textContent = 'אישור הזמנה';
     $('#err').textContent = res.reason==='closed'
-      ? 'ההזמנות לסבב הזה נסגרו לפני שההזמנה נשלחה.'
+      ? 'לא נשארו מספיק כיכרות במלאי עבור ההזמנה הזו.'
       : 'ההזמנה לא נשלחה. בדקו חיבור לאינטרנט ונסו שוב.';
     refresh(); return;
   }
