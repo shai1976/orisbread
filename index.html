@@ -9,14 +9,14 @@
 
 <!-- ============================================================
      CONFIG (JSON)
-     sheetUrl: כתובת ה-Web App של Google Apps Script (ריק = מצב הדגמה מקומי)
+     apiUrl: נתיב ה-API של Vercel. ברירת מחדל: /api/order
      maxOrders / orderRound / open מנוהלים בלשונית Config בגיליון.
      הערכים כאן משמשים רק כגיבוי במצב הדגמה.
      ============================================================ -->
 <script type="application/json" id="config">
 {
   "business": "עדהלחם",
-  "sheetUrl": "https://script.google.com/macros/s/AKfycbzYJ_nMAi1aZ26XlJfpUWkscfJ58MoLp8GTTaCRMgPgcHAY-DxRxYyj4sDOGCVZM__SCQ/exec",
+  "apiUrl": "/api/order",
   "bitPhone": "0544444444",
   "maxOrders": 20,
   "orderRound": "2026-10-02",
@@ -165,9 +165,9 @@ pre.summary{white-space:pre-wrap;background:var(--card);border:1.5px dashed var(
 const CFG = JSON.parse(document.getElementById('config').textContent);
 
 /* ---------- Order store ----------
-   sheetUrl מוגדר → Google Sheet (המגבלה נאכפת בשרת)
-   sheetUrl ריק  → מצב הדגמה בדפדפן בלבד */
-const LOCAL = !CFG.sheetUrl;
+   apiUrl מוגדר → Vercel API → Google Apps Script → Google Sheet
+   apiUrl ריק  → מצב הדגמה בדפדפן בלבד */
+const LOCAL = !CFG.apiUrl;
 const KEY = 'adahlechem_orders';
 const Store = {
   status: { open: true, left: CFG.maxOrders, ready: false },
@@ -179,7 +179,7 @@ const Store = {
       return;
     }
     try{
-      const r = await fetch(CFG.sheetUrl + '?action=status');
+      const r = await fetch(CFG.apiUrl + '?action=status', { cache: 'no-store' });
       const s = await r.json();
       this.status = { open: !!s.open, left: s.left, ready: true };
     }catch(e){ this.status = { open: false, left: 0, ready: true, error: true }; }
@@ -192,9 +192,9 @@ const Store = {
       try{ localStorage.setItem(KEY, JSON.stringify(l)); }catch(e){}
       await this.load(); return { ok: true, id: order.id };
     }
-    const r = await fetch(CFG.sheetUrl, {
+    const r = await fetch(CFG.apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // בלי preflight
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(order)
     });
     const res = await r.json();
