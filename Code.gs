@@ -1,36 +1,37 @@
 /**
- * עדהלחם — backend להזמנות + מלאי כיכרות
+ * עדהלחם — backend להזמנות + מלאי כיכרות בלבד
  *
  * לשונית Config (עמודה A = מפתח, עמודה B = ערך):
- *   maxLoaves   — מספר הכיכרות הזמינות בסבב
+ *   loavesLeft  — מספר הכיכרות שנותרו כרגע
  *   orderRound  — מזהה סבב, למשל 2026-10-02
  *   open        — TRUE / FALSE לפתיחה/סגירה ידנית
  *
- * תאימות לאחור: אם maxLoaves לא קיים, המערכת תשתמש ב-maxOrders.
+ * אין תלות במספר ההזמנות ואין ספירה של שורות ב-Orders.
+ * כל הזמנה מפחיתה רק את מספר הכיכרות שהוזמנו מ-loavesLeft.
  */
 
 const ORDERS = 'Orders';
 const CONFIG = 'Config';
-const COUNT_PREFIX = 'roundLoaves:';
 const HEADERS = ['מספר הזמנה', 'סבב', 'תאריך', 'שם', 'טלפון', 'מקום איסוף',
                  'פירוט', 'סה"כ ₪', 'סטטוס', 'items_json'];
 
 function setup() {
   const ss = SpreadsheetApp.getActive();
+
   let o = ss.getSheetByName(ORDERS) || ss.insertSheet(ORDERS);
   o.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold');
   o.setFrozenRows(1);
   o.setRightToLeft(true);
 
   let c = ss.getSheetByName(CONFIG) || ss.insertSheet(CONFIG);
+  c.clear();
   c.getRange(1, 1, 3, 2).setValues([
-    ['maxLoaves', 20],
+    ['loavesLeft', 17],
     ['orderRound', '2026-10-02'],
     ['open', true]
   ]);
   c.getRange('B2').setNumberFormat('@');
   c.setRightToLeft(true);
-  syncStockCounter();
 }
 
 function getConfig_() {
@@ -40,80 +41,61 @@ function getConfig_() {
   const last = Math.max(sh.getLastRow(), 1);
   const rows = sh.getRange(1, 1, last, 2).getValues();
   const cfg = {};
-  rows.forEach(r => cfg[String(r[0]).trim()] = r[1]);
+  const rowMap = {};
 
-  const maxRaw = cfg.maxLoaves !== undefined && cfg.maxLoaves !== '' ? cfg.maxLoaves : cfg.maxOrders;
+  rows.forEach((r, i) => {
+    const key = String(r[0] || '').trim();
+    if (!key) return;
+    cfg[key] = r[1];
+    rowMap[key] = i + 1;
+  });
+
+  // תאימות זמנית: אם loavesLeft עדיין לא קיים, השתמש ב-maxLoaves כערך התחלתי.
+  const leftRaw = cfg.loavesLeft !== undefined && cfg.loavesLeft !== ''
+    ? cfg.loavesLeft
+    : cfg.maxLoaves;
+
   return {
-    maxLoaves: Math.max(0, Number(maxRaw) || 0),
+    sheet: sh,
+    rowMap: rowMap,
+    loavesLeft: Math.max(0, Math.floor(Number(leftRaw) || 0)),
     orderRound: String(cfg.orderRound || '').trim(),
     open: cfg.open === true || String(cfg.open).toUpperCase() === 'TRUE'
   };
 }
 
-function countKey_(round) {
-  return COUNT_PREFIX + round;
+function ensureLoavesLeftRow_(cfg) {
+  if (cfg.rowMap.loavesLeft) return cfg.rowMap.loavesLeft;
+
+  const row = cfg.sheet.getLastRow() + 1;
+  cfg.sheet.getRange(row, 1, 1, 2).setValues([['loavesLeft', cfg.loavesLeft]]);
+  cfg.rowMap.loavesLeft = row;
+  return row;
+}
+
+function setLoavesLeft_(cfg, value) {
+  const row = ensureLoavesLeftRow_(cfg);
+  cfg.sheet.getRange(row, 2).setValue(Math.max(0, Math.floor(Number(value) || 0)));
 }
 
 function itemQty_(item) {
   return Math.max(0, Math.floor(Number(item && item.qty) || 0));
 }
 
-/** סופר כיכרות קיימות בסבב מתוך items_json. */
-function countLoavesFromSheet_(round) {
-  const sh = SpreadsheetApp.getActive().getSheetByName(ORDERS);
-  if (!sh) return 0;
-  const last = sh.getLastRow();
-  if (last < 2) return 0;
-
-  // B = סבב, J = items_json
-  const rows = sh.getRange(2, 2, last - 1, 9).getValues();
-  let count = 0;
-  for (let i = 0; i < rows.length; i++) {
-    if (String(rows[i][0]).trim() !== round) continue;
-    try {
-      const items = JSON.parse(rows[i][8] || '[]');
-      if (Array.isArray(items)) count += items.reduce((sum, item) => sum + itemQty_(item), 0);
-    } catch (_) {
-      // הזמנה ישנה ללא JSON תקין: נספרת ככיכר אחת כדי לא לפתוח מלאי בטעות.
-      count += 1;
-    }
-  }
-  return count;
-}
-
-function getRoundCount_(round) {
-  const props = PropertiesService.getScriptProperties();
-  const key = countKey_(round);
-  const saved = props.getProperty(key);
-  if (saved !== null) return Number(saved) || 0;
-
-  const count = countLoavesFromSheet_(round);
-  props.setProperty(key, String(count));
-  return count;
-}
-
-function setRoundCount_(round, count) {
-  PropertiesService.getScriptProperties().setProperty(countKey_(round), String(count));
-}
-
-/** להריץ ידנית אם מוחקים/עורכים הזמנות ישירות בגיליון. */
-function syncStockCounter() {
-  const cfg = getConfig_();
-  const count = countLoavesFromSheet_(cfg.orderRound);
-  setRoundCount_(cfg.orderRound, count);
-  return { round: cfg.orderRound, loaves: count, left: Math.max(0, cfg.maxLoaves - count) };
-}
-
 function status_() {
   const cfg = getConfig_();
-  const count = getRoundCount_(cfg.orderRound);
-  const left = Math.max(0, cfg.maxLoaves - count);
-  return { ok: true, open: cfg.open && left > 0, left: left, round: cfg.orderRound };
+  const left = cfg.loavesLeft;
+  return {
+    ok: true,
+    open: cfg.open && left > 0,
+    left: left,
+    round: cfg.orderRound
+  };
 }
 
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
-                       .setMimeType(ContentService.MimeType.JSON);
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet(e) {
@@ -127,8 +109,11 @@ function doGet(e) {
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
+
   try {
-    if (!lock.tryLock(2500)) return json_({ ok: false, reason: 'busy' });
+    if (!lock.tryLock(2500)) {
+      return json_({ ok: false, reason: 'busy' });
+    }
 
     const o = JSON.parse(e.postData && e.postData.contents ? e.postData.contents : '{}');
     const name = String(o.name || '').trim().slice(0, 80);
@@ -142,10 +127,8 @@ function doPost(e) {
     }
 
     const cfg = getConfig_();
-    const count = getRoundCount_(cfg.orderRound);
-    const left = Math.max(0, cfg.maxLoaves - count);
+    const left = cfg.loavesLeft;
 
-    // בודק מלאי בפועל לפני הכתיבה. הזמנה גדולה מהמלאי הנותר נדחית כולה.
     if (!cfg.open || left <= 0 || requested > left) {
       return json_({ ok: false, reason: 'closed', left: left });
     }
@@ -155,8 +138,13 @@ function doPost(e) {
 
     const row = sh.getLastRow() + 1;
     const id = 'ADA-' + String(row + 999);
-    const detail = items.map(i => `${String(i.name || '').trim()} × ${itemQty_(i)}`).join('\n');
-    const total = items.reduce((t, i) => t + itemQty_(i) * (Number(i.price) || 0), 0);
+    const detail = items
+      .map(i => `${String(i.name || '').trim()} × ${itemQty_(i)}`)
+      .join('\n');
+    const total = items.reduce(
+      (t, i) => t + itemQty_(i) * (Number(i.price) || 0),
+      0
+    );
 
     sh.getRange(row, 1, 1, HEADERS.length).setValues([[
       id,
@@ -171,8 +159,10 @@ function doPost(e) {
       JSON.stringify(items)
     ]]);
 
-    setRoundCount_(cfg.orderRound, count + requested);
-    return json_({ ok: true, id: id, left: left - requested });
+    const newLeft = left - requested;
+    setLoavesLeft_(cfg, newLeft);
+
+    return json_({ ok: true, id: id, left: newLeft });
   } catch (err) {
     console.error(err);
     return json_({ ok: false, reason: 'error' });
