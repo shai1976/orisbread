@@ -139,7 +139,14 @@ function doPost(e) {
     const row = sh.getLastRow() + 1;
     const id = 'ADA-' + String(row + 999);
     const detail = items
-      .map(i => `${String(i.name || '').trim()} × ${itemQty_(i)}`)
+      .flatMap(i => {
+        const name = String(i.name || '').trim();
+        const qty = itemQty_(i);
+        const sliced = Array.isArray(i.sliced) ? i.sliced : [];
+        return Array.from({ length: qty }, (_, n) =>
+          `${name}${qty > 1 ? ` — כיכר ${n + 1}` : ''}: ${sliced[n] ? 'פרוס' : 'לא פרוס'}`
+        );
+      })
       .join('\n');
     const total = items.reduce(
       (t, i) => t + itemQty_(i) * (Number(i.price) || 0),

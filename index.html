@@ -107,6 +107,12 @@ button{font:inherit;cursor:pointer}
 .close{position:absolute;top:14px;left:16px;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:none;color:var(--ink);font-size:20px}
 .lines{margin:0 0 18px;padding:0;list-style:none}
 .lines li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line)}
+.slice-box{margin:16px 0 20px;padding:14px;border:1.5px solid var(--line);border-radius:14px;background:var(--card)}
+.slice-box h3{margin:0 0 10px;font-size:18px}
+.slice-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.slice-item:last-child{border-bottom:0}
+.slice-item input{width:20px;height:20px;accent-color:var(--crust)}
+.slice-item span{flex:1}
 .total{display:flex;justify-content:space-between;font-weight:700;font-size:20px;margin:6px 0 20px}
 label.f{display:block;font-weight:600;margin:14px 0 6px}
 input[type=text],input[type=tel]{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
@@ -256,6 +262,11 @@ $('#openCart').addEventListener('click', ()=>{
     <h2 id="sheetTitle">הסל שלך</h2>
     <ul class="lines">${lines.map(l=>`<li><span>${l.name} × ${l.qty}</span><span>${nis(l.qty*l.price)}</span></li>`).join('')}</ul>
     <div class="total"><span>סה"כ</span><span>${nis(cartTotal())}</span></div>
+    <div class="slice-box">
+      <h3>לפרוס את הלחם?</h3>
+      ${lines.map(l=>Array.from({length:l.qty},(_,i)=>`<label class="slice-item"><input type="checkbox" data-slice-product="${l.id}" data-slice-index="${i}"><span>${l.name}${l.qty>1?` — כיכר ${i+1}`:''}</span><strong>לפרוס</strong></label>`).join('')).join('')}
+      <small style="display:block;margin-top:8px;color:var(--ink-soft)">ברירת המחדל היא לא לפרוס.</small>
+    </div>
     <label class="f" for="name">שם מלא</label>
     <input type="text" id="name" autocomplete="name" placeholder="איך לרשום את ההזמנה?">
     <label class="f" for="phone">טלפון <span style="font-weight:400;color:var(--ink-soft)">(לא חובה)</span></label>
@@ -273,7 +284,14 @@ async function confirmOrder(){
   if(!name){ $('#err').textContent='צריך שם כדי לרשום את ההזמנה.'; $('#name').focus(); return; }
   if(!pk){ $('#err').textContent='בחרו מקום איסוף: בנימינה או גבעת עדה.'; return; }
   const btn = $('#confirm'); btn.disabled = true; btn.textContent = 'שולח הזמנה…';
-  const order = { name, phone, pickup: pk.value, items: cartLines(), total: cartTotal() };
+  const items = cartLines().map(item => {
+    const sliced = Array.from({length:item.qty}, (_,i) => {
+      const cb = document.querySelector(`[data-slice-product="${item.id}"][data-slice-index="${i}"]`);
+      return !!(cb && cb.checked);
+    });
+    return {...item, sliced};
+  });
+  const order = { name, phone, pickup: pk.value, items, total: cartTotal() };
   let res;
   try{ res = await Store.add(order); }catch(e){ res = { ok:false, reason:'network' }; }
   if(!res.ok){
@@ -288,7 +306,7 @@ async function confirmOrder(){
   const summary = [
     `הזמנה מעדהלחם ${order.id}`,
     `שם: ${order.name}`,
-    ...order.items.map(i=>`${i.name} × ${i.qty}`),
+    ...order.items.flatMap(i=>Array.from({length:i.qty},(_,n)=>`${i.name}${i.qty>1?` — כיכר ${n+1}`:''}: ${i.sliced && i.sliced[n] ? 'פרוס' : 'לא פרוס'}`)),
     `איסוף: ${order.pickup}, יום שישי בבוקר`,
     `סה"כ: ${order.total} ₪`
   ].join('\n');
