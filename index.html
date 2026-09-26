@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עדהלחם - לחם מחמצת ביתי</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Assistant & Heebo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Heebo:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        amber: {
+                            50: '#fffbeed',
+                            100: '#fef3c7',
+                            800: '#92400e',
+                            900: '#78350f',
+                        },
+                        bakery: {
+                            cream: '#FDFBF7',
+                            warmBg: '#F7F3EB',
+                            crust: '#3E2723',
+                            accent: '#D97706',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Assistant', 'Heebo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F7F3EB;
+            font-family: 'Assistant', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .crust-gradient {
+            background: linear-gradient(135deg, #3E2723 0%, #5D4037 100%);
+        }
+        .modal-active {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="text-stone-800 antialiased pb-28 min-h-screen">
+
+    <!-- Header with Branding -->
+    <header class="crust-gradient text-amber-50 relative overflow-hidden shadow-lg border-b-4 border-amber-600">
+        <div class="max-w-md mx-auto px-4 pt-8 pb-10 text-center relative z-10">
+            <!-- Bakery Logo Container -->
+            <div class="inline-block bg-stone-900/40 p-4 rounded-3xl border border-amber-500/30 backdrop-blur-sm mb-4 shadow-inner">
+                <div class="flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-wheat-awn text-3xl text-amber-400"></i>
+                    <h1 class="text-4xl font-extrabold tracking-tight text-white font-serif">עדהלחם</h1>
+                    <i class="fa-solid fa-bread-slice text-3xl text-amber-400"></i>
+                </div>
+                <p class="text-xs tracking-widest text-amber-200 mt-1 uppercase font-semibold">מחמצת ביתית ותוספות</p>
+            </div>
+
+            <!-- Ory's Welcome Card -->
+            <div class="bg-amber-900/40 border border-amber-500/20 backdrop-blur-md rounded-2xl p-5 text-right mt-2 shadow-md">
+                <div class="flex items-center gap-3 mb-2 pb-2 border-b border-amber-500/20">
+                    <div class="w-10 h-10 rounded-full bg-amber-500 text-stone-900 flex items-center justify-center font-bold text-lg shadow">
+                        א
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-white text-base">אורי מאפה מחמצת</h2>
+                        <span class="text-xs text-amber-200 flex items-center gap-1">
+                            <i class="fa-solid fa-heart text-red-400 text-[10px]"></i> באהבה מבית אורי
+                        </span>
+                    </div>
+                </div>
+                
+                <p class="text-sm leading-relaxed text-amber-100/90 whitespace-pre-line font-medium">
+שלום וברוכים הבאים לעדהלחם.
+שמי אורי ואני מייצר בעבודת יד לחמי מחמצת "בלאדי" 🍞
+עשויים קמח - מים - מלח בלבד. 
+בלי חוכמות (משפרי אפייה), בלי טריקים (חומרים משמרים) ובלי שטיקים.
+תמיד אהבתי מאד לחם ולכן אני גם אופה אותו באהבה ובהנאה גדולה – והטעם והתגובות בהתאם 🩵
+                </p>
+            </div>
+        </div>
+
+        <div class="absolute -top-12 -left-12 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl"></div>
+        <div class="absolute -bottom-12 -right-12 w-40 h-40 bg-amber-700/20 rounded-full blur-2xl"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-md mx-auto px-4 mt-6">
+        
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-stone-900 flex items-center gap-2">
+                <span>תפריט הלחמים</span>
+                <span class="text-xs bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-semibold">אפייה טרייה</span>
+            </h2>
+            <span class="text-xs text-stone-500"><i class="fa-solid fa-check text-green-600"></i> 100% טבעי</span>
+        </div>
+
+        <!-- Products List -->
+        <div class="space-y-4" id="products-container"></div>
+
+        <!-- Location & Payment Info -->
+        <div class="mt-8 space-y-3">
+            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-stone-200 flex items-start gap-3">
+                <i class="fa-solid fa-location-dot text-amber-600 text-xl mt-1"></i>
+                <div class="text-xs text-stone-600 leading-relaxed">
+                    <strong class="text-stone-800 text-sm block mb-0.5">נקודות איסוף עצמי:</strong>
+                    בנימינה וגבעת עדה. את מיקום האיסוף המדויק תבחרו בעת סיום ההזמנה.
+                </div>
+            </div>
+
+            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-stone-200 flex items-start gap-3">
+                <i class="fa-solid fa-shield-halved text-amber-600 text-xl mt-1"></i>
+                <div class="text-xs text-stone-600 leading-relaxed">
+                    <strong class="text-stone-800 text-sm block mb-0.5">תשלום פשוט ומאובטח:</strong>
+                    התשלום מבוצע באופן ישיר דרך אפליקציית <strong>Bit (ביט)</strong> לאחר אישור פרטי ההזמנה.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Cart Bar -->
+    <div id="sticky-cart-bar" class="fixed bottom-0 left-0 right-0 z-30 transform translate-y-full transition-transform duration-300 ease-out p-4 bg-gradient-to-t from-stone-900 via-stone-900/95 to-transparent">
+        <div class="max-w-md mx-auto">
+            <button onclick="openCartModal()" class="w-full bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white p-4 rounded-2xl shadow-xl flex items-center justify-between transition duration-200 border border-amber-500/30">
+                <div class="flex items-center gap-3">
+                    <div class="relative bg-amber-700 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg border border-amber-400/30">
+                        <i class="fa-solid fa-basket-shopping text-amber-200"></i>
+                        <span id="cart-badge-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-stone-900">0</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-amber-200 font-medium">לסל הקניות שלך</div>
+                        <div class="text-sm font-bold text-white"><span id="cart-summary-items">0</span> פריטים בסל</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 bg-stone-900/60 px-4 py-2 rounded-xl border border-amber-500/20">
+                    <span class="text-lg font-black text-amber-300" id="cart-total-price">₪0</span>
+                    <i class="fa-solid fa-arrow-left text-xs text-amber-400"></i>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Cart & Form Modal -->
+    <div id="cart-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-stone-900/70 backdrop-blur-sm transition-opacity" onclick="closeCartModal()"></div>
+
+        <div class="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-stone-50 rounded-t-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border-t-2 border-amber-500/40">
+            
+            <div class="p-4 bg-white border-b border-stone-200 flex items-center justify-between sticky top-0 z-10">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center">
+                        <i class="fa-solid fa-shopping-bag"></i>
+                    </div>
+                    <h3 class="font-bold text-stone-800 text-lg">סיכום הזמנה ופרטים</h3>
+                </div>
+                <button onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:bg-stone-200 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-4 overflow-y-auto space-y-5 flex-1">
+                
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-stone-200">
+                    <h4 class="font-bold text-stone-700 text-sm mb-3 flex items-center justify-between border-b pb-2 border-stone-100">
+                        <span>סל הלחמים</span>
+                        <span class="text-xs text-stone-400 font-normal">לחם מחמצת טרי</span>
+                    </h4>
+                    <div id="cart-modal-items" class="divide-y divide-stone-100"></div>
+                    
+                    <div class="mt-3 pt-3 border-t border-dashed border-stone-200 flex justify-between items-center text-stone-900 font-bold">
+                        <span>סה"כ לתשלום:</span>
+                        <span id="modal-total-price" class="text-xl text-amber-700 font-black">₪0</span>
+                    </div>
+                </div>
+
+                <form id="order-form" onsubmit="handleFormSubmit(event)" class="bg-white rounded-2xl p-4 shadow-sm border border-stone-200 space-y-4">
+                    <h4 class="font-bold text-stone-700 text-sm border-b pb-2 border-stone-100 flex items-center gap-2">
+                        <i class="fa-solid fa-user-check text-amber-600"></i>
+                        <span>פרטי איסוף ויצירת קשר</span>
+                    </h4>
+
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1" for="customer-name">שם מלא *</label>
+                        <input type="text" id="customer-name" required placeholder="יש להזין שם מלא"
+                            class="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1" for="customer-phone">מספר טלפון *</label>
+                        <input type="tel" id="customer-phone" required placeholder="050-0000000" pattern="[0-9\-]{9,12}"
+                            class="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition text-right" dir="ltr">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-2">מקום איסוף לבחירה *</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition border-stone-200 hover:border-amber-400 has-[:checked]:border-amber-600 has-[:checked]:bg-amber-50/50">
+                                <input type="radio" name="pickup-location" value="בנימינה" checked class="sr-only">
+                                <div class="text-center">
+                                    <i class="fa-solid fa-house text-amber-700 mb-1 block"></i>
+                                    <span class="text-xs font-bold text-stone-800">בנימינה</span>
+                                </div>
+                            </label>
+                            <label class="relative flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition border-stone-200 hover:border-amber-400 has-[:checked]:border-amber-600 has-[:checked]:bg-amber-50/50">
+                                <input type="radio" name="pickup-location" value="גבעת עדה" class="sr-only">
+                                <div class="text-center">
+                                    <i class="fa-solid fa-tree text-amber-700 mb-1 block"></i>
+                                    <span class="text-xs font-bold text-stone-800">גבעת עדה</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1" for="customer-notes">הערות נוספות (אופציונלי)</label>
+                        <textarea id="customer-notes" rows="2" placeholder="בקשות מיוחדות, שעת איסוף וכד'..."
+                            class="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-stone-900 hover:bg-stone-800 active:scale-[0.99] text-white py-3.5 px-4 rounded-xl font-bold text-base shadow-lg flex items-center justify-center gap-2 transition mt-2">
+                        <span>המשך לתשלום ב-Bit</span>
+                        <i class="fa-solid fa-arrow-left text-amber-400"></i>
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bit Payment Modal -->
+    <div id="payment-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-stone-900/80 backdrop-blur-md"></div>
+
+        <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-md mx-auto bg-white rounded-3xl p-5 shadow-2xl border-2 border-amber-500/30 overflow-y-auto max-h-[90vh]">
+            
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl shadow-inner border border-green-200">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 class="text-2xl font-black text-stone-900">אישור תשלום והזמנה</h3>
+                <p class="text-xs text-stone-500 mt-1">הזמנתך מוכנה! לביצוע התשלום עקוב אחר ההנחיות</p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4 text-center">
+                <div class="text-xs text-blue-800 font-bold mb-1 uppercase tracking-wide">הנחיות לתשלום ב-Bit</div>
+                <div class="text-sm text-stone-700">
+                    נא להעביר סכום של <strong id="bit-amount" class="text-xl text-blue-900 font-black block my-1">₪0</strong>
+                    למספר הטלפון:
+                </div>
+                <div class="bg-white py-2 px-4 rounded-xl border border-blue-200 inline-block my-2 text-stone-900 font-black text-xl tracking-wider shadow-sm dir-ltr">
+                    054-4444444
+                </div>
+                <div class="text-xs text-stone-500 mt-1">
+                    בבעלות: <strong>אורי (עדהלחם)</strong>
+                </div>
+            </div>
+
+            <div class="bg-stone-50 rounded-2xl p-4 border border-stone-200 text-sm space-y-2 mb-4">
+                <div class="font-bold text-stone-800 text-xs border-b border-stone-200 pb-2 flex justify-between">
+                    <span>סיכום פרטי העסקה</span>
+                    <span id="summary-date" class="text-stone-400 font-normal"></span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-stone-500">שם הלקוח:</span>
+                    <strong id="summary-name" class="text-stone-800"></strong>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-stone-500">טלפון:</span>
+                    <strong id="summary-phone" class="text-stone-800 dir-ltr"></strong>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-stone-500">מקום איסוף:</span>
+                    <strong id="summary-location" class="text-amber-800 font-bold"></strong>
+                </div>
+                <div id="summary-notes-container" class="hidden text-xs bg-amber-50/50 p-2 rounded-lg border border-amber-200/50">
+                    <span class="text-stone-500 block">הערות:</span>
+                    <span id="summary-notes" class="text-stone-800 font-medium"></span>
+                </div>
+                <div class="pt-2 border-t border-stone-200">
+                    <span class="text-xs text-stone-500 block mb-1">פירוט המוצרים:</span>
+                    <div id="summary-items-list" class="text-xs text-stone-800 space-y-1 font-medium bg-white p-2 rounded-lg border border-stone-200"></div>
+                </div>
+            </div>
+
+            <div class="space-y-2.5">
+                <button onclick="copyOrderSummary()" id="copy-btn" class="w-full bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white py-3 px-4 rounded-xl font-bold text-sm shadow flex items-center justify-center gap-2 transition">
+                    <i class="fa-regular fa-copy text-base"></i>
+                    <span id="copy-btn-text">העתק סיכום להודעה / ביט</span>
+                </button>
+
+                <a href="https://www.bitpay.co.il/" target="_blank" rel="noopener" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white py-3 px-4 rounded-xl font-bold text-sm shadow flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-mobile-screen text-base"></i>
+                    <span>פתח את אפליקציית Bit</span>
+                </a>
+
+                <button onclick="closePaymentModal()" class="w-full bg-stone-100 hover:bg-stone-200 text-stone-600 py-2.5 px-4 rounded-xl font-semibold text-xs transition">
+                    סגור וחזור לדף הבית
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const products = [
+            {
+                id: 1,
+                title: "לחם הכפר",
+                price: 32,
+                description: "לחם כפרי - מחמצת וקמחים לבן ומלא (30%) ללא משפרים ומשמרים.",
+                badges: ["מומלץ", "בלאדי"],
+                icon: "fa-bread-slice",
+                accentColor: "bg-amber-100 text-amber-800 border-amber-300"
+            },
+            {
+                id: 2,
+                title: "לחם כוסמין",
+                price: 35,
+                description: "100% קמח כוסמין מלא, מחמצת טבעית, מרקם עשיר וטעם אגוזי עדין.",
+                badges: ["100% כוסמין"],
+                icon: "fa-wheat-awn",
+                accentColor: "bg-emerald-100 text-emerald-800 border-emerald-300"
+            },
+            {
+                id: 3,
+                title: "לחם אדום",
+                price: 36,
+                description: "לחם מחמצת מיוחד עם עגבניות מיובשות, תבלינים ים תיכוניים וטעם עמוק.",
+                badges: ["מיוחד"],
+                icon: "fa-pepper-hot",
+                accentColor: "bg-red-100 text-red-800 border-red-300"
+            },
+            {
+                id: 4,
+                title: "לחם עם זיתי קלמטה",
+                price: 36,
+                description: "לחם מחמצת עשיר בזיתי קלמטה איכותיים, עשבי תיבול ושמן זית.",
+                badges: ["זיתי קלמטה"],
+                icon: "fa-seedling",
+                accentColor: "bg-purple-100 text-purple-800 border-purple-300"
+            }
+        ];
+
+        let cart = {};
+
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            container.innerHTML = products.map(product => {
+                const qty = cart[product.id] || 0;
+                return `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-stone-200/80 hover:shadow-md transition duration-200">
+                        <div class="flex gap-3">
+                            <div class="w-24 h-24 rounded-xl bg-gradient-to-br from-stone-100 to-amber-50 flex-shrink-0 flex items-center justify-center relative overflow-hidden border border-amber-200/60 shadow-inner">
+                                <div class="text-center p-1">
+                                    <i class="fa-solid ${product.icon} text-3xl text-amber-700 opacity-90 mb-1"></i>
+                                    <span class="block text-[10px] font-extrabold text-amber-900 tracking-wider uppercase">עדהלחם</span>
+                                </div>
+                                <div class="absolute top-1 right-1">
+                                    ${product.badges.map(badge => `
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md ${product.accentColor} border shadow-xs">
+                                            ${badge}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="font-extrabold text-stone-900 text-lg leading-tight">${product.title}</h3>
+                                    </div>
+                                    <p class="text-xs text-stone-500 mt-1 leading-relaxed font-normal">${product.description}</p>
+                                </div>
+
+                                <div class="flex justify-between items-center mt-3 pt-2 border-t border-stone-100">
+                                    <div class="text-stone-900 font-extrabold text-lg">
+                                        ₪${product.price}
+                                        <span class="text-[10px] font-normal text-stone-400"> / יחידה</span>
+                                    </div>
+
+                                    <div class="flex items-center gap-1.5 bg-stone-100 p-1 rounded-xl border border-stone-200">
+                                        <button onclick="updateQuantity(${product.id}, -1)" 
+                                            class="w-8 h-8 rounded-lg bg-white shadow-xs text-stone-700 flex items-center justify-center font-bold active:scale-95 transition disabled:opacity-40"
+                                            ${qty === 0 ? 'disabled' : ''}>
+                                            <i class="fa-solid fa-minus text-xs"></i>
+                                        </button>
+                                        
+                                        <span class="w-6 text-center font-bold text-sm text-stone-800">${qty}</span>
+
+                                        <button onclick="updateQuantity(${product.id}, 1)" 
+                                            class="w-8 h-8 rounded-lg bg-amber-600 text-white shadow-xs flex items-center justify-center font-bold active:scale-95 transition">
+                                            <i class="fa-solid fa-plus text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateQuantity(productId, delta) {
+            const currentQty = cart[productId] || 0;
+            const newQty = Math.max(0, currentQty + delta);
+            
+            if (newQty === 0) {
+                delete cart[productId];
+            } else {
+                cart[productId] = newQty;
+            }
+
+            renderProducts();
+            updateCartSummary();
+        }
+
+        function updateCartSummary() {
+            let totalItems = 0;
+            let totalPrice = 0;
+
+            for (const [id, qty] of Object.entries(cart)) {
+                const prod = products.find(p => p.id === parseInt(id));
+                if (prod) {
+                    totalItems += qty;
+                    totalPrice += prod.price * qty;
+                }
+            }
+
+            document.getElementById('cart-badge-count').innerText = totalItems;
+            document.getElementById('cart-summary-items').innerText = totalItems;
+            document.getElementById('cart-total-price').innerText = `₪${totalPrice}`;
+            document.getElementById('modal-total-price').innerText = `₪${totalPrice}`;
+
+            const stickyBar = document.getElementById('sticky-cart-bar');
+            if (totalItems > 0) {
+                stickyBar.classList.remove('translate-y-full');
+            } else {
+                stickyBar.classList.add('translate-y-full');
+                closeCartModal();
+            }
+        }
+
+        function openCartModal() {
+            const modalItems = document.getElementById('cart-modal-items');
+            let html = '';
+            for (const [id, qty] of Object.entries(cart)) {
+                const prod = products.find(p => p.id === parseInt(id));
+                if (prod) {
+                    html += `
+                        <div class="py-2.5 flex items-center justify-between text-sm">
+                            <div>
+                                <strong class="text-stone-800 block">${prod.title}</strong>
+                                <span class="text-xs text-stone-500">₪${prod.price} × ${qty} יחידות</span>
+                            </div>
+                            <span class="font-bold text-amber-900">₪${prod.price * qty}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            modalItems.innerHTML = html;
+            document.getElementById('cart-modal').classList.remove('hidden');
+            document.body.classList.add('modal-active');
+        }
+
+        function closeCartModal() {
+            document.getElementById('cart-modal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('customer-name').value.trim();
+            const phone = document.getElementById('customer-phone').value.trim();
+            const location = document.querySelector('input[name="pickup-location"]:checked').value;
+            const notes = document.getElementById('customer-notes').value.trim();
+
+            let totalPrice = 0;
+            let summaryItemsHtml = '';
+
+            for (const [id, qty] of Object.entries(cart)) {
+                const prod = products.find(p => p.id === parseInt(id));
+                if (prod) {
+                    const itemTotal = prod.price * qty;
+                    totalPrice += itemTotal;
+                    summaryItemsHtml += `
+                        <div class="flex justify-between">
+                            <span>• ${prod.title} (${qty} יח')</span>
+                            <span>₪${itemTotal}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            document.getElementById('bit-amount').innerText = `₪${totalPrice}`;
+            document.getElementById('summary-name').innerText = name;
+            document.getElementById('summary-phone').innerText = phone;
+            document.getElementById('summary-location').innerText = location;
+            document.getElementById('summary-items-list').innerHTML = summaryItemsHtml;
+            document.getElementById('summary-date').innerText = new Date().toLocaleDateString('he-IL');
+
+            if (notes) {
+                document.getElementById('summary-notes').innerText = notes;
+                document.getElementById('summary-notes-container').classList.remove('hidden');
+            } else {
+                document.getElementById('summary-notes-container').classList.add('hidden');
+            }
+
+            closeCartModal();
+            document.getElementById('payment-modal').classList.remove('hidden');
+            document.body.classList.add('modal-active');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
+            
+            cart = {};
+            renderProducts();
+            updateCartSummary();
+            document.getElementById('order-form').reset();
+        }
+
+        function copyOrderSummary() {
+            const name = document.getElementById('summary-name').innerText;
+            const phone = document.getElementById('summary-phone').innerText;
+            const location = document.getElementById('summary-location').innerText;
+            const bitAmount = document.getElementById('bit-amount').innerText;
+            const notes = document.getElementById('summary-notes').innerText;
+
+            let itemsListText = '';
+            for (const [id, qty] of Object.entries(cart)) {
+                const prod = products.find(p => p.id === parseInt(id));
+                if (prod) {
+                    itemsListText += `- ${prod.title}: ${qty} יח' (₪${prod.price * qty})\n`;
+                }
+            }
+
+            const formattedText = 
+`🍞 *הזמנה חדשה - עדהלחם*
+------------------------
+👤 שם: ${name}
+📞 טלפון: ${phone}
+📍 מקום איסוף: ${location}
+${notes ? `📝 הערות: ${notes}\n` : ''}
+🛒 *פירוט הלחמים:*
+${itemsListText}
+💰 *סה"כ לתשלום:* ${bitAmount}
+------------------------
+לתשלום ב-Bit למספר: 054-4444444 (אורי)`;
+
+            const tempInput = document.createElement('textarea');
+            tempInput.value = formattedText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const btnText = document.getElementById('copy-btn-text');
+            const originalText = btnText.innerText;
+            btnText.innerText = 'הועתק בהצלחה! ✓';
+            
+            setTimeout(() => {
+                btnText.innerText = originalText;
+            }, 2500);
+        }
+
+        window.onload = function() {
+            renderProducts();
+        };
+    </script>
+</body>
+</html>
