@@ -12,6 +12,8 @@
 
 const ORDERS = 'Orders';
 const CONFIG = 'Config';
+const EXTRA_PRICE = 3;
+const ALLOWED_EXTRAS = ['זיתים', 'אגוזים', 'פרג', 'שומשום'];
 const HEADERS = ['מספר הזמנה', 'סבב', 'תאריך', 'שם', 'טלפון', 'מקום איסוף',
                  'פירוט', 'סה"כ ₪', 'סטטוס', 'items_json'];
 
@@ -143,15 +145,28 @@ function doPost(e) {
         const name = String(i.name || '').trim();
         const qty = itemQty_(i);
         const sliced = Array.isArray(i.sliced) ? i.sliced : [];
-        return Array.from({ length: qty }, (_, n) =>
-          `${name}${qty > 1 ? ` — כיכר ${n + 1}` : ''}: ${sliced[n] ? 'פרוס' : 'לא פרוס'}`
-        );
+        const extras = Array.isArray(i.extras) ? i.extras : [];
+        return Array.from({ length: qty }, (_, n) => {
+          const selected = Array.isArray(extras[n])
+            ? extras[n].map(x => String(x || '').trim()).filter(x => ALLOWED_EXTRAS.includes(x))
+            : [];
+          const parts = [sliced[n] ? 'פרוס' : 'לא פרוס'];
+          if (selected.length) parts.push('תוספות: ' + selected.join(', '));
+          return `${name}${qty > 1 ? ` — כיכר ${n + 1}` : ''}: ${parts.join(' · ')}`;
+        });
       })
       .join('\n');
-    const total = items.reduce(
-      (t, i) => t + itemQty_(i) * (Number(i.price) || 0),
-      0
-    );
+    const total = items.reduce((t, i) => {
+      const qty = itemQty_(i);
+      const base = qty * (Number(i.price) || 0);
+      const extras = Array.isArray(i.extras) ? i.extras : [];
+      const extrasCount = Array.from({ length: qty }, (_, n) =>
+        Array.isArray(extras[n])
+          ? extras[n].map(x => String(x || '').trim()).filter(x => ALLOWED_EXTRAS.includes(x)).length
+          : 0
+      ).reduce((a, b) => a + b, 0);
+      return t + base + extrasCount * EXTRA_PRICE;
+    }, 0);
 
     sh.getRange(row, 1, 1, HEADERS.length).setValues([[
       id,
