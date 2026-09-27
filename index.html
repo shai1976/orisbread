@@ -27,7 +27,9 @@
     { "id": "kids",     "name": "לחם שילדים אוהבים",     "desc": "מחמצת מקמח לבן, רך וטעים",                         "price": 30, "tone": "#6f5a3e", "image": "f5277df5-0d49-4c84-b636-a0391d0eeb46.jpg" },
     { "id": "ryeSeeds", "name": "לחם שיפון וגרעינים",    "desc": "לחם שיפון מזין ומשביע, מלא בדברים טובים.",          "price": 38, "tone": "#8c4a3a", "image": "e457a850-26fb-4c3e-94fc-123b768719c6.jpg" },
     { "id": "spelt",    "name": "לחם מחמצת כוסמין מלא",  "desc": "לחם 100% מקמח כוסמין מלא. טעים, משביע ובריא!",       "price": 38, "tone": "#4e4a3c", "image": "49f7122c-8aed-4634-8316-007222116f2e.jpg" }
-  ]
+  ],
+  "extras": ["זיתים", "אגוזים", "פרג", "שומשום"],
+  "extraPrice": 3
 }
 </script>
 
@@ -113,6 +115,15 @@ button{font:inherit;cursor:pointer}
 .slice-item:last-child{border-bottom:0}
 .slice-item input{width:20px;height:20px;accent-color:var(--crust)}
 .slice-item span{flex:1}
+.loaf-options{margin:16px 0 20px;padding:14px;border:1.5px solid var(--line);border-radius:14px;background:var(--card)}
+.loaf-options h3{margin:0 0 10px;font-size:18px}
+.option-loaf{padding:12px 0;border-bottom:1px dashed var(--line)}
+.option-loaf:last-child{border-bottom:0}
+.option-loaf-title{font-weight:700;margin-bottom:8px}
+.option-row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.option-check{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.option-check input{width:19px;height:19px;accent-color:var(--crust)}
+.option-note{display:block;margin-top:8px;color:var(--ink-soft);font-size:14px}
 .total{display:flex;justify-content:space-between;font-weight:700;font-size:20px;margin:6px 0 20px}
 label.f{display:block;font-weight:600;margin:14px 0 6px}
 input[type=text],input[type=tel]{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
@@ -158,7 +169,7 @@ pre.summary{white-space:pre-wrap;background:var(--card);border:1.5px dashed var(
   <h2 class="section-title">הלחמים של השבוע</h2>
   <p class="sub" id="stock"></p>
   <section id="products"></section>
-  <div class="extras-note"><strong>פריסה</strong><br>ניתן להזמין כל כיכר פרוסה.</div>
+  <div class="extras-note"><strong>פריסה ותוספות</strong><br>ניתן להזמין כל כיכר פרוסה. לכל כיכר אפשר להוסיף זיתים, אגוזים, פרג או שומשום — 3 ₪ לכל תוספת.</div>
 
   <p class="foot">עדהלחם · מחמצת בלאדי<br>תשלום בביט לאחר ההזמנה למספר 052-422-7075<br>לשאלות או בקשות: <a href="tel:0524227075">אורי 052-422-7075</a></p>
 </main>
@@ -235,6 +246,9 @@ function renderProducts(){
 }
 function cartLines(){ return CFG.products.filter(p=>cart[p.id]).map(p=>({id:p.id,name:p.name,qty:cart[p.id],price:p.price})); }
 function cartTotal(){ return cartLines().reduce((s,l)=>s+l.qty*l.price,0); }
+function selectedExtrasTotal(){ return document.querySelectorAll('[data-extra]:checked').length * (Number(CFG.extraPrice)||0); }
+function sheetTotal(){ return cartTotal() + selectedExtrasTotal(); }
+function updateSheetTotal(){ const el=document.getElementById('sheetTotal'); if(el) el.textContent=nis(sheetTotal()); }
 function renderBar(){
   const n = cartLines().reduce((s,l)=>s+l.qty,0);
   $('#bar').classList.toggle('show', n>0 && !isClosed());
@@ -262,12 +276,18 @@ $('#openCart').addEventListener('click', ()=>{
   openSheet(`
     <h2 id="sheetTitle">הסל שלך</h2>
     <ul class="lines">${lines.map(l=>`<li><span>${l.name} × ${l.qty}</span><span>${nis(l.qty*l.price)}</span></li>`).join('')}</ul>
-    <div class="total"><span>סה"כ</span><span>${nis(cartTotal())}</span></div>
-    <div class="slice-box">
-      <h3>לפרוס את הלחם?</h3>
-      ${lines.map(l=>Array.from({length:l.qty},(_,i)=>`<label class="slice-item"><input type="checkbox" data-slice-product="${l.id}" data-slice-index="${i}"><span>${l.name}${l.qty>1?` — כיכר ${i+1}`:''}</span><strong>לפרוס</strong></label>`).join('')).join('')}
-      <small style="display:block;margin-top:8px;color:var(--ink-soft)">ברירת המחדל היא לא לפרוס.</small>
+    <div class="loaf-options">
+      <h3>פריסה ותוספות לכל כיכר</h3>
+      ${lines.map(l=>Array.from({length:l.qty},(_,i)=>`<div class="option-loaf">
+        <div class="option-loaf-title">${l.name}${l.qty>1?` — כיכר ${i+1}`:''}</div>
+        <div class="option-row">
+          <label class="option-check"><input type="checkbox" data-slice-product="${l.id}" data-slice-index="${i}"><span>לפרוס</span></label>
+          ${CFG.extras.map(ex=>`<label class="option-check"><input type="checkbox" data-extra data-extra-product="${l.id}" data-extra-index="${i}" value="${ex}"><span>${ex} +${CFG.extraPrice} ₪</span></label>`).join('')}
+        </div>
+      </div>`).join('')).join('')}
+      <small class="option-note">ברירת המחדל: לא פרוס וללא תוספות.</small>
     </div>
+    <div class="total"><span>סה"כ</span><span id="sheetTotal">${nis(cartTotal())}</span></div>
     <label class="f" for="name">שם מלא</label>
     <input type="text" id="name" autocomplete="name" placeholder="איך לרשום את ההזמנה?">
     <label class="f" for="phone">טלפון <span style="font-weight:400;color:var(--ink-soft)">(לא חובה)</span></label>
@@ -277,6 +297,7 @@ $('#openCart').addEventListener('click', ()=>{
     <p class="err" id="err" role="alert"></p>
     <button class="primary" id="confirm">אישור הזמנה</button>`);
   $('#confirm').addEventListener('click', confirmOrder);
+  document.querySelectorAll('[data-extra]').forEach(cb=>cb.addEventListener('change', updateSheetTotal));
 });
 
 async function confirmOrder(){
@@ -290,9 +311,13 @@ async function confirmOrder(){
       const cb = document.querySelector(`[data-slice-product="${item.id}"][data-slice-index="${i}"]`);
       return !!(cb && cb.checked);
     });
-    return {...item, sliced};
+    const extras = Array.from({length:item.qty}, (_,i) =>
+      Array.from(document.querySelectorAll(`[data-extra-product="${item.id}"][data-extra-index="${i}"]:checked`)).map(cb=>cb.value)
+    );
+    return {...item, sliced, extras};
   });
-  const order = { name, phone, pickup: pk.value, items, total: cartTotal() };
+  const extraCount = items.reduce((sum,item)=>sum+item.extras.reduce((n,list)=>n+list.length,0),0);
+  const order = { name, phone, pickup: pk.value, items, total: cartTotal() + extraCount * (Number(CFG.extraPrice)||0) };
   let res;
   try{ res = await Store.add(order); }catch(e){ res = { ok:false, reason:'network' }; }
   if(!res.ok){
@@ -307,7 +332,12 @@ async function confirmOrder(){
   const summary = [
     `הזמנה מעדהלחם ${order.id}`,
     `שם: ${order.name}`,
-    ...order.items.flatMap(i=>Array.from({length:i.qty},(_,n)=>`${i.name}${i.qty>1?` — כיכר ${n+1}`:''}: ${i.sliced && i.sliced[n] ? 'פרוס' : 'לא פרוס'}`)),
+    ...order.items.flatMap(i=>Array.from({length:i.qty},(_,n)=>{
+      const parts = [i.sliced && i.sliced[n] ? 'פרוס' : 'לא פרוס'];
+      const ex = i.extras && i.extras[n] ? i.extras[n] : [];
+      if(ex.length) parts.push(`תוספות: ${ex.join(', ')}`);
+      return `${i.name}${i.qty>1?` — כיכר ${n+1}`:''}: ${parts.join(' · ')}`;
+    })),
     `איסוף: ${order.pickup}, יום שישי בבוקר`,
     `סה"כ: ${order.total} ₪`
   ].join('\n');
