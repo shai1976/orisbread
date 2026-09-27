@@ -21,7 +21,7 @@
   "orderRound": "2026-10-02",
   "deadline": "הזמנות עד יום רביעי בחצות",
   "pickupTime": "איסוף ביום שישי בבוקר",
-  "pickupPoints": ["בנימינה", "גבעת עדה"],
+  "pickupPoints": ["בנימינה — החרצית 9, אצל משפחת ברדה", "גבעת עדה — כליל החורש 8, אצל משפחת אחאי"],
   "products": [
     { "id": "kfar",     "name": "לחם הכפר",              "desc": "לחם מחמצת \"כפרי\" מקמח חיטה לבן ומלא (30%)", "price": 33, "tone": "#8a6440", "image": "241feef9-8c3f-4c02-82bf-04023c37244c.jpg" },
     { "id": "kids",     "name": "לחם שילדים אוהבים",     "desc": "מחמצת מקמח לבן, רך וטעים",                         "price": 30, "tone": "#6f5a3e", "image": "f5277df5-0d49-4c84-b636-a0391d0eeb46.jpg" },
@@ -304,7 +304,7 @@ async function confirmOrder(){
   const name = $('#name').value.trim(), phone = $('#phone').value.trim();
   const pk = document.querySelector('input[name=pickup]:checked');
   if(!name){ $('#err').textContent='צריך שם כדי לרשום את ההזמנה.'; $('#name').focus(); return; }
-  if(!pk){ $('#err').textContent='בחרו מקום איסוף: בנימינה או גבעת עדה.'; return; }
+  if(!pk){ $('#err').textContent='בחרו מקום איסוף.'; return; }
   const btn = $('#confirm'); btn.disabled = true; btn.textContent = 'שולח הזמנה…';
   const items = cartLines().map(item => {
     const sliced = Array.from({length:item.qty}, (_,i) => {
