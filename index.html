@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+  <meta property="og:title" content="אורי - לחם מחמצת בלאדי">
+  <meta property="og:description" content="לחמי מחמצת טריים להזמנה">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://orisbread.vercel.app/">
+  <meta property="og:image" content="https://orisbread.vercel.app/kafri.jpeg">
+  <meta property="og:image:alt" content="לחם מחמצת של אורי">
+  <meta name="twitter:card" content="summary_large_image">
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>עדהלחם · הזמנת לחם מחמצת</title>
@@ -200,14 +208,24 @@ const Store = {
     }catch(e){ this.status = { open: false, left: 0, ready: true, error: true }; }
   },
   async add(order){
-    const r = await fetch(CFG.apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(order)
-    });
-    const res = await r.json();
-    await this.load();
-    return res;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try{
+      const r = await fetch(CFG.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(order),
+        signal: controller.signal
+      });
+      const res = await r.json();
+      if(res && res.ok){
+        const left = Math.max(0, Math.floor(Number(res.left) || 0));
+        this.status = { open: left > 0, left, ready: true };
+      }
+      return res;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 };
 
